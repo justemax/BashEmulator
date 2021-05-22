@@ -27,9 +27,9 @@ int main(void){
 
 	getcwd(directory,1024);
 
-	printf("\e[1;1H\e[2J"); //Permet de nettoyer l'ecran
+	printf("\e[1;1H\e[2J"); //Clear screen
 
-	printf("\033[0;33m"); //Changement de couleur pour le shell
+	printf("\033[0;33m"); //Change shell color
 	printf("%s%% ",directory);
 	printf("\033[0m");
 		
@@ -40,7 +40,7 @@ int main(void){
 			break;	
 		strcpy(comCopy,commande);
 		strtok(comCopy,"\n");
-		// decomposition de la commande dans un tableau d'argument
+		// Parse command on arg tab
 		char* pt = commande;
 		while((arg[nbArg] = strsep(&pt," ")) != NULL){
 			printf("%s \n", arg[nbArg]);
@@ -48,11 +48,11 @@ int main(void){
 		}
 
 
-		//Enleve le  retour a la ligne du dernier argument
+		//Delete cariage return
 		strtok(arg[nbArg-1],"\n");
 		
 	
-		// Debut de gestion de la commande
+		// Start of command processing
 		if(strcmp("exit",arg[0]) == 0){
 			break;
 		}
@@ -89,7 +89,7 @@ int main(void){
 
 void ChangeDirectory(char* path, char* actualDirect){
 	if(chdir(path) < 0){
-		printf("Chemin inconnu impossible de changer de repertoire\n");
+		printf("Path error, can't change repository \n");
 	}else{
 		getcwd(actualDirect,1024);
 	}
@@ -119,7 +119,7 @@ void ExecCommand(char* commande){
 	bool inputFile = false;
 
 
-	//Traitement du pipe
+	//Pipe management
 	
 	bool tuyeau = false;
 
@@ -127,7 +127,7 @@ void ExecCommand(char* commande){
 	char** listeCommandePipe;
 	listeCommandePipe = malloc(sizeof(char)*512);
 
-	//Decomposition de la commande en fonction des tuyeau
+	//Parse command by pipe
 	char* pt = commande;
 
 	while((listeCommandePipe[nbPipe] = strsep(&pt,"|")) != NULL){
@@ -176,7 +176,7 @@ void ExecCommand(char* commande){
 					dup2(fileRedi,1);
 					close(fileRedi);
 				}else{
-					printf("Pas de fichier a effacer creation du fichier\n");
+					printf("No file to delet, creation of file\n");
 					fileRedi = open(fileNameRedi, O_WRONLY | O_APPEND | O_CREAT, 0666);
 					dup2(fileRedi,1);
 					close(fileRedi);
@@ -186,7 +186,7 @@ void ExecCommand(char* commande){
 			if(inputFile){
 				fileIn = open(fileNameIn, O_RDONLY);
 				if(fileIn < 0)
-					printf("Fichier inexistant");
+					printf("file doesn't exist");
 				else{
 					dup2(fileIn,0);
 					close(fileIn);
@@ -195,24 +195,25 @@ void ExecCommand(char* commande){
 
 			}
 
-			//Debut de la partie de gestion du pipe
-			//Tant que on est pas a la derniere iteration on redirige
+			//pipe management
+			//If it's not the last iteration of pipe
+			//redirection
 			if(tuyeau){
-				dup2(tube[1],1); //Lui a enlever sur la derniere
+				dup2(tube[1],1);
 				dup2(entree,0);
 				close(tube[0]);
 				close(tube[1]);
-			}else{ //traitement dernier pipe ou on doit sortir
+			}else{ //Last pipe management
 				dup2(entree,0);
 				close(tube[0]);
 				close(tube[1]);
 			}
 
 			if(execvp(argument[0],argument) < 0){
-				printf("Commande inconnu\n");
+				printf("Unknown command\n");
 			}
 		
-		}else{ //Pere
+		}else{ //father
 			close(tube[1]);
 			entree = tube[0];
 			wait(NULL);
@@ -226,7 +227,7 @@ void ExecCommand(char* commande){
 }
 
 
-//Fonction permettant de detecter les parametre de la commande ainsi que ses redirections si il y en as
+//Parse thge command to exec here and management of redirection
 void ParseCommand(char* commande,char** commandeAExec, bool* redirectionS, bool* redirectionErr, bool* redirEffa, bool* input, char* nomFichier, char* nomFichierErr, char* nomInput){
 	char* tmp;
 	tmp = malloc(sizeof(char)*126);
